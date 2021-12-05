@@ -9,7 +9,7 @@ const Marketplace = () => {
   return (
     <>
       {!user && <Login />}
-      {user && active && <Gallery />}
+      <Gallery />
     </>
   )
 }

@@ -14,7 +14,7 @@ import { WalletConnectConnector } from '@web3-react/walletconnect-connector'
 
 export enum ConnectorNames {
   Metamask = 'Metamask',
-  WalletConnect = 'WalletConnect',
+  // WalletConnect = 'WalletConnect',
 }
 
 const POLLING_INTERVAL = 12000
@@ -92,7 +92,7 @@ export const walletconnect = new WalletConnectConnector({
 export const connectorsByName: { [connectorName in ConnectorNames]: any } = {
   [ConnectorNames.Metamask]: injected,
   // [ConnectorNames.Network]: network,
-  [ConnectorNames.WalletConnect]: walletconnect,
+  // [ConnectorNames.WalletConnect]: walletconnect,
   // [ConnectorNames.WalletLink]: walletlink,
   // [ConnectorNames.Ledger]: ledger,
   // [ConnectorNames.Trezor]: trezor,
