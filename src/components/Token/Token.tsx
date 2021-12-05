@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router'
 import { FormEvent, MouseEvent, useState } from 'react'
 import { utils, BigNumber, constants } from 'ethers'
@@ -26,6 +27,26 @@ export type TokenProps = {
   name: string
 }
 
+const useTimeout = (callback: () => void, delay: number) => {
+  const savedCallback = useRef()
+
+  useEffect(() => {
+    // @ts-ignore
+    savedCallback.current = callback
+  }, [callback])
+
+  useEffect(() => {
+    const tick = () => {
+      // @ts-ignore
+      savedCallback.current()
+    }
+    if (delay !== null) {
+      let id = setTimeout(tick, delay)
+      return () => clearTimeout(id)
+    }
+  }, [delay])
+}
+
 export type TokenCompProps = {
   token: TokenProps
   isOnSale?: boolean
@@ -40,6 +61,10 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
   const [onSaleActive, setOnSale] = useState<boolean>(false)
   const [address, setAddress] = useState<string>('')
   const [price, setPrice] = useState<string>('')
+  useTimeout(() => {
+    setDonated(true)
+  }, 20000)
+
   const {
     user,
     ethPrice,
@@ -64,7 +89,6 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
     // approveDai()
     if (!donated) {
       chargeParticle(BigNumber.from(100))
-      setDonated(true)
     } else {
       window.location.href = '/tour.html'
     }
@@ -229,7 +253,14 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
         )}
         {onBuy && (
           <Flex mt={3} sx={{ justifyContent: 'center', width: '100%', flexDirection: 'column' }}>
-            {donated ? <div /> : <Input onChange={e => setPrice(e.currentTarget.value)} placeholder="Donation in DAI" />}
+            {donated ? (
+              <div />
+            ) : (
+              <Input
+                onChange={e => setPrice(e.currentTarget.value)}
+                placeholder="Donation in DAI"
+              />
+            )}
             <Button
               sx={{
                 opacity: !!user?.ownedTokens.find(
