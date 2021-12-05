@@ -6,9 +6,13 @@ import { useAppState } from '../state'
 
 export type VisitProps = {}
 
+type VisitParams = {
+  id: string
+}
+
 const Visit = () => {
   const { user, tokensOnSale } = useAppState()
-  // let { topicId } = useParams()
+  let { id } = useParams<VisitParams>()
 
   if (!user) return null
 

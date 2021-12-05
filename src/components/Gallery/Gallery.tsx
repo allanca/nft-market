@@ -25,7 +25,7 @@ const Gallery = () => {
       <Grid gap={4} columns={['1fr 1fr', '1fr 1fr', '1fr 1fr 1fr']}>
         <Token
           onBuy={true}
-          token={{ id: '1', uri: '/', price: BigNumber.from('2000000000000000000'), name: 'test' }}
+          token={{ id: '1', uri: '/', price: BigNumber.from('20000000000000000000'), name: 'test' }}
           key={1}
         />
         {/*        <Token onBuy={true} token={{id: "2", uri: "/", price: BigNumber.from(100), name: "test"}} key={2} />

@@ -1,17 +1,30 @@
-import Maker from '@makerdao/dai';
+import Maker from '@makerdao/dai'
 import NFTT from '@fluuuid/nft-contracts/build/contracts/NFTT.json'
 import create from 'zustand'
 import { BigNumber, Contract, utils, Event } from 'ethers'
+import Web3 from 'web3'
 
 import { TokenProps } from '../components/Token'
 import { ContractPropsDetails, UserProps } from '../types'
 
-const kovanAddresses = require('@charged-particles/protocol-subgraph/networks/kovan');
-const chargedParticlesAddress = kovanAddresses.chargedParticles.address;
-const chargedParticlesAbi = require('@charged-particles/protocol-subgraph/abis/ChargedParticles');
+import daiAbi from '../contracts/dai.js'
+
+const daiAddress = '0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD'
+
+const ethAddresses = require('@charged-particles/protocol-subgraph/networks/mainnet')
+console.log(ethAddresses)
+
+const kovanAddresses = require('@charged-particles/protocol-subgraph/networks/kovan')
+console.log(kovanAddresses)
+const chargedParticlesAddress = kovanAddresses.chargedParticles.address
+const chargedParticlesAbi = require('@charged-particles/protocol-subgraph/abis/ChargedParticles')
+const protonAbi = require('@charged-particles/protocol-subgraph/abis/Proton')
+const protonAddress = kovanAddresses.proton.address
+console.log(protonAddress)
 
 export interface StateContext {
   isAuthenticated: boolean
+  dai?: Contract
   contract?: Contract
   contractDetails?: ContractPropsDetails
   user?: UserProps
@@ -34,6 +47,8 @@ export interface StateContext {
   setTokenSale(id: string, price: BigNumber, onSale: boolean): Promise<boolean>
   transferToken(id: string, to: string): void
   getUserTokens(address?: string): Promise<TokenProps[]>
+  approveDai(): Promise<boolean>
+  chargeParticle(amount: BigNumber): Promise<boolean>
 }
 
 const useAppState = create<StateContext>((set, get) => ({
@@ -66,15 +81,18 @@ const useAppState = create<StateContext>((set, get) => ({
       //   throw new Error('The network you selected is no supported yet.')
       // }
 
-      const address = chargedParticlesAddress
-      const contract = new Contract(address, chargedParticlesAbi, library.getSigner())
+      const address = protonAddress
+      const contract = new Contract(address, protonAbi, library.getSigner())
 
-      const name = "PARTICLE" //await contract.name()
-      const symbol = "CHARGE" //await contract.symbol()
+      const name = 'PARTICLE' //await contract.name()
+      const symbol = 'CHARGE' //await contract.symbol()
+
+      const dai = new Contract(daiAddress, daiAbi, library.getSigner())
 
       set({
         library,
         contract,
+        dai,
         contractDetails: {
           name,
           symbol,
@@ -212,91 +230,74 @@ const useAppState = create<StateContext>((set, get) => ({
       console.log(e)
     }
   },
-  // chargeParticle: async () => {
-  //   try {
+  approveDai: async () => {
+    try {
+      const { contract, dai, user, setTransaction } = get()
+      if (!contract) throw new Error('No contract found')
+      if (!dai) throw new Error('No dau found')
+      if (!user) throw new Error('No user found')
 
-  //   daiAddress = presets.Aave.v2.dai[chainId];
-  //   dai = new ethers.Contract(daiAddress, daiABI, daiSigner);
-  //   daiSigner = ethers.provider.getSigner(daiHodler);
-  //   const daiABI = require('../abis/dai');
+      const tx = await dai['approve(address,uint256)'](
+        chargedParticlesAddress,
+        Web3.utils.toWei('10')
+      )
 
-  //   const devUsdcJson = JSON.parse(JSON.stringify(devUsdcAbi));
-  //   const uscdContractInstance = new web3.eth.Contract(devUsdcJson.abi, contractAddresses.uscdAddress);
+      setTransaction(tx)
+      return true
+    } catch (e) {
+      console.log(e)
+      return false
+    }
+  },
+  chargeParticle: async (amount: BigNumber) => {
+    try {
+      const { contract, dai, user, library, setTransaction } = get()
+      if (!contract) throw new Error('No contract found')
+      if (!dai) throw new Error('No dau found')
+      if (!user) throw new Error('No user found')
 
+      // console.log(await library.getProvider().getStorageAt(contract.address))
 
-  //     const { contract, user, setTransaction } = get()
-  //     if (!contract) throw new Error('No contract found')
-  //     if (!user) throw new Error('No user found')
+      const tx = await contract['createBasicProton(address,address,string)'](
+        user.address,
+        user.address,
+        'https://cdn.discordapp.com/attachments/916741226089291826/917124584262754364/Bio_Bay_Image.jpeg'
+      )
 
-  //     const tx = await contract.setTokenSale(id, onSale, price, { from: user.address })
-  //     setTransaction(tx)
-  //     return true
-  //   } catch (e) {
-  //     console.log(e)
-  //     return false
-  //   }
-  //   const tx = await contract.purchaseToken(id, { value: price })
+      // const tx = await contract['createChargedParticle(address,address,address,string,string,address,uint256,uint256)'](
+      //   user.address,
+      //   user.address,
+      //   '0x0000000000000000000000000000000000000000',
+      //   'https://cdn.discordapp.com/attachments/916741226089291826/917124584262754364/Bio_Bay_Image.jpeg',
+      //   'generic',
+      //   daiAddress,
+      //   Web3.utils.toWei(amount.toString()),
+      //   1000,
+      // );
 
-  //   await signerD.sendTransaction({ to: daiHodler, value: toWei('10') }); // charge up the dai hodler with a few ether in order for it to be able to transfer us some tokens
+      setTransaction(tx)
+      return true
+    } catch (e) {
+      console.log(e)
+      return false
+    }
 
-  //   await dai.connect(daiSigner).transfer(user1, toWei('10'));
-  //   await dai.connect(signer1)['approve(address,uint256)'](proton.address, toWei('10'));
-
-  //   const energizedParticleId = await callAndReturn({
-  //     contractInstance: proton,
-  //     contractMethod: 'createChargedParticle',
-  //     contractCaller: signer1,
-  //     contractParams: [
-  //       user1,                        // creator
-  //       user2,                        // receiver
-  //       user3,                        // referrer
-  //       TEST_NFT_TOKEN_URI,           // tokenMetaUri
-  //       'aave',                       // walletManagerId
-  //       daiAddress, // assetToken
-  //       toWei('10'),                  // assetAmount
-  //       annuityPct,                   // annuityPercent
-  //     ],
-  //   });
-  // }
+    // const energizedParticleId = await callAndReturn({
+    //   contractInstance: proton,
+    //   contractMethod: 'createChargedParticle',
+    //   contractCaller: signer1,
+    //   contractParams: [
+    //     user1,                        // creator
+    //     user2,                        // receiver
+    //     user3,                        // referrer
+    //     TEST_NFT_TOKEN_URI,           // tokenMetaUri
+    //     'aave',                       // walletManagerId
+    //     daiAddress, // assetToken
+    //     toWei('10'),                  // assetAmount
+    //     annuityPct,                   // annuityPercent
+    //   ],
+    // });
+  },
 }))
 
 export { useAppState }
-
-// const getAllTokens = async ({ contract }: Props) => {
-//   try {
-//     const logs = await contract.provider.getLogs({
-//       address: contract.address,
-//       fromBlock: 0,
-//       toBlock: 'latest',
-//     })
-
-//     const decoder = new utils.AbiCoder()
-
-//     console.log(contract)
-
-//     const tokens = await Promise.all<TokenProps>(
-//       await logs.reduce<any>(async (acc: TokenProps[], log: Log) => {
-//         const [from] = decoder.decode(['address'], log.topics[1])
-
-//         const list = await acc
-
-//         if (from === utils.getAddress('0x0000000000000000000000000000000000000000')) {
-//           const tokenId =
-//             log.topics && log.topics[3]
-//               ? utils.formatUnits(BigNumber.from(log.topics[3]), 'wei')
-//               : undefined
-
-//           const token = tokenId && (await contract.tokenMeta(tokenId))
-//           if (token) {
-//             list.push(token)
-//           }
-//         }
-//         return list
-//       }, Promise.resolve([]) as Promise<TokenProps[]>)
-//     )
-
-//     return tokens
-//   } catch (e) {
-//     console.log(e)
-//   }
-// }

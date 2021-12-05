@@ -39,7 +39,16 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
   const [onSaleActive, setOnSale] = useState<boolean>(false)
   const [address, setAddress] = useState<string>('')
   const [price, setPrice] = useState<string>('')
-  const { user, ethPrice, contractDetails, transferToken, buyToken, setTokenSale } = useAppState()
+  const {
+    user,
+    ethPrice,
+    contractDetails,
+    transferToken,
+    buyToken,
+    setTokenSale,
+    approveDai,
+    chargeParticle,
+  } = useAppState()
   const history = useHistory()
 
   const onTransferClick = async (e: FormEvent | MouseEvent) => {
@@ -51,7 +60,10 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
   }
 
   const onBuyClick = (id: string) => {
-    history.push('/' + id)
+    // approveDai()
+    chargeParticle(BigNumber.from(100))
+
+    // history.push('/' + id)
     // e.preventDefault()
     // onBuy && buyToken(token.id, token.price)
   }
@@ -87,8 +99,6 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
 
   if (!data.name) return null
 
-  console.log(token.price)
-
   return (
     <Card variant="nft">
       <Image
@@ -105,14 +115,13 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
         <Heading as="h2">{data.name}</Heading>
         <Divider variant="divider.nft" />
         <Box>
-          <Text sx={{ color: 'lightBlue', fontSize: 1, fontWeight: 'bold' }}>Entry Fee</Text>
+          <Text sx={{ color: 'lightBlue', fontSize: 1, fontWeight: 'bold' }}>
+            Suggested Donation Stake
+          </Text>
           <Heading as="h3" sx={{ color: 'green', m: 0, fontWeight: 'bold' }}>
-            {constants.EtherSymbol} {Number(utils.formatEther(token.price)).toFixed(2)}{' '}
-            <Text sx={{ color: 'navy' }} as="span" variant="text.body">
-              ({tokenPriceEth})
-            </Text>
+            {Number(utils.formatEther(token.price)).toFixed(2)} DAI
           </Heading>
-          {owner && typeof owner === 'string' && !onTransfer && (
+          {/*          {owner && typeof owner === 'string' && !onTransfer && (
             <Box mt={2}>
               <Text as="p" sx={{ color: 'lightBlue', fontSize: 1, fontWeight: 'bold' }}>
                 Owner
@@ -132,6 +141,7 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
               </NavLink>
             </Box>
           )}
+*/}{' '}
           <Box mt={2}></Box>
         </Box>
 
@@ -214,7 +224,8 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
           </Flex>
         )}
         {onBuy && (
-          <Flex mt={3} sx={{ justifyContent: 'center', width: '100%' }}>
+          <Flex mt={3} sx={{ justifyContent: 'center', width: '100%', flexDirection: 'column' }}>
+            <Input onChange={e => setPrice(e.currentTarget.value)} placeholder="Donation in DAI" />
             <Button
               sx={{
                 opacity: !!user?.ownedTokens.find(
