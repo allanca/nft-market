@@ -35,6 +35,7 @@ export type TokenCompProps = {
 }
 
 const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) => {
+  const [donated, setDonated] = useState<boolean>(false)
   const [transfer, setTransfer] = useState<boolean>(false)
   const [onSaleActive, setOnSale] = useState<boolean>(false)
   const [address, setAddress] = useState<string>('')
@@ -61,9 +62,12 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
 
   const onBuyClick = (id: string) => {
     // approveDai()
-    chargeParticle(BigNumber.from(100))
-
-    // history.push('/' + id)
+    if (!donated) {
+      chargeParticle(BigNumber.from(100))
+      setDonated(true)
+    } else {
+      window.location.href = '/tour.html'
+    }
     // e.preventDefault()
     // onBuy && buyToken(token.id, token.price)
   }
@@ -225,7 +229,7 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
         )}
         {onBuy && (
           <Flex mt={3} sx={{ justifyContent: 'center', width: '100%', flexDirection: 'column' }}>
-            <Input onChange={e => setPrice(e.currentTarget.value)} placeholder="Donation in DAI" />
+            {donated ? <div /> : <Input onChange={e => setPrice(e.currentTarget.value)} placeholder="Donation in DAI" />}
             <Button
               sx={{
                 opacity: !!user?.ownedTokens.find(
@@ -244,7 +248,7 @@ const Token = ({ token, isOnSale, onTransfer, onBuy, onSale }: TokenCompProps) =
               }}
               variant="quartiary"
             >
-              Visit
+              {donated ? 'Visit' : 'Donate'}
             </Button>
           </Flex>
         )}
